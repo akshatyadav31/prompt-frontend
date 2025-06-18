@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Enhancement Studio - RSTI/TCREI/TFCDC</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        },
+                        accent: {
+                            500: '#10b981',
+                            600: '#059669'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);}
+        .method-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1);}
+        .method-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);}
+        .code-block { background: #1e293b; border-radius: 8px; padding: 1rem; overflow-x: auto; font-family: 'Monaco','Menlo','Ubuntu Mono',monospace;}
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ENHANCEMENT API USING NETLIFY FUNCTION (NO API KEY ON CLIENT) ---
+        const API_BASE_URL = "https://685317b5abe1d4a8453dc408--prompt-backend.netlify.app"; // Change this to your Netlify site
+
+        const enhancementAPI = {
+            /**
+             * Enhanced prompt engineering using advanced frameworks (TCREI/RSTI/TFCDC)
+             * Calls your Netlify function (no API key or OpenRouter URL exposed)
+             */
+            enhancePrompt: async (input, method, parameters) => {
+                if (!input?.trim()) throw new Error("Input prompt is required");
+
+                try {
+                    // Call your Netlify function instead of OpenRouter directly
+                    const response = await fetch(`${API_BASE_URL}/enhance-prompt`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            input,
+                            method,
+                            parameters
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    // Expecting the same output structure as before
+                    return result;
+                } catch (error) {
+                    console.error('Enhancement failed:', error);
+                    return enhancementAPI.getFallbackEnhancement(input, method, parameters);
+                }
+            },
+
+            parseMethodologySteps: (content, method) => {
+                // Try to extract a section for each step, fallback to template
+                const steps = {
+                    rsti: ['revisit', 'separate', 'try', 'introduce'],
+                    tcrei: ['task', 'context', 'resources', 'evaluate', 'iterate'],
+                    tfcdc: ['thinking', 'frameworks', 'checkpoints', 'debugging', 'context']
+                };
+                const methodSteps = steps[method] || [];
+                const suggestions = {};
+                methodSteps.forEach(step => {
+                    const regex = new RegExp(`${step}[\\s\\-:]*([\\s\\S]+?)(\\n|$)`, "i");
+                    const match = content.match(regex);
+                    suggestions[step] = match ? match[1].trim().replace(/\n+$/, "") : `${step.charAt(0).toUpperCase() + step.slice(1)} enhancement applied`;
+                });
+                return suggestions;
+            },
+
+            getFallbackEnhancement: (input, method, parameters) => {
+                const fallbackEnhancements = {
+                    rsti: {
+                        revisit: "Applied proven 'Act as expert' pattern for authority",
+                        separate: "Split into numbered steps for clarity",
+                        try: "Enhanced with action-oriented verbs",
+                        introduce: `Added ${parameters.wordLimit || 200} word limit and professional tone`
+                    },
+                    tcrei: {
+                        task: "Clearly defined primary objective",
+                        context: "Added audience and use case context",
+                        resources: "Specified relevant tools and references",
+                        evaluate: "Defined success criteria",
+                        iterate: "Included feedback incorporation strategy"
+                    },
+                    tfcdc: {
+                        thinking: "Added architectural planning phase",
+                        frameworks: "Specified modern tech stack",
+                        checkpoints: "Integrated testing and validation",
+                        debugging: "Included error handling strategy",
+                        context: "Added documentation requirements"
+                    }
+                };
+                return {
+                    original: input,
+                    enhanced: `Enhanced ${method.toUpperCase()} Prompt:\n\n${input}\n\n[Enhanced with ${method.toUpperCase()} methodology - API temporarily unavailable, showing structured enhancement]`,
+                    suggestions: fallbackEnhancements[method],
+                    confidence: 0.75,
+                    model: 'fallback-mode',
+                    method: method.toUpperCase(),
+                    timestamp: new Date().toISOString()
+                };
+            },
+
+            savePrompt: async (prompt, user) => {
+                try {
+                    const savedPrompts = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+                    const newPrompt = {
+                        ...prompt,
+                        id: Date.now().toString(),
+                        userId: user?.uid || 'anonymous',
+                        createdAt: new Date().toISOString()
+                    };
+                    savedPrompts.unshift(newPrompt);
+                    localStorage.setItem('promptHistory', JSON.stringify(savedPrompts.slice(0, 50)));
+                    return { id: newPrompt.id, saved: true };
+                } catch (error) {
+                    return { saved: false, error: error.message };
+                }
+            },
+
+            loadHistory: async (user) => {
+                try {
+                    const savedPrompts = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+                    return savedPrompts.filter(p => p.userId === (user?.uid || 'anonymous'));
+                } catch {
+                    return [];
+                }
+            }
+        };
+
+        // Auto-detect model preference based on prompt content
+        function autoDetectModel(prompt) {
+            const codeKeywords = /\b(code|typescript|python|javascript|react|api|function|class|import|export|async|await)\b/i;
+            const creativeKeywords = /\b(write|story|poem|creative|article|blog|marketing|content)\b/i;
+            if (codeKeywords.test(prompt)) return "Code-focused";
+            if (creativeKeywords.test(prompt)) return "Creative writing";
+            return "General purpose";
+        }
+
+        // Main App Component
+        function App() {
+            const [currentView, setCurrentView] = useState('home');
+            const [prompt, setPrompt] = useState('');
+            const [selectedMethod, setSelectedMethod] = useState('rsti');
+            const [enhancement, setEnhancement] = useState(null);
+            const [isLoading, setIsLoading] = useState(false);
+            const [wordLimit, setWordLimit] = useState(200);
+            const [detectedModel, setDetectedModel] = useState('');
+            const [user, setUser] = useState({ uid: 'anonymous', displayName: 'Anonymous User' });
+            const [history, setHistory] = useState([]);
+            const [showHistory, setShowHistory] = useState(false);
+            const [error, setError] = useState(null);
+
+            useEffect(() => { enhancementAPI.loadHistory(user).then(h => setHistory(h)); }, [user]);
+            useEffect(() => { setDetectedModel(autoDetectModel(prompt)); }, [prompt]);
+
+            const handleEnhance = async () => {
+                if (!prompt.trim()) { setError('Please enter a prompt to enhance'); return; }
+                setIsLoading(true); setError(null);
+                try {
+                    const result = await enhancementAPI.enhancePrompt(prompt, selectedMethod, {
+                        wordLimit,
+                        context: detectedModel,
+                        audienceLevel: "General",
+                        tone: "Professional",
+                        outputFormat: "Structured prompt"
+                    });
+                    setEnhancement(result);
+                } catch (error) {
+                    setError(`Enhancement failed: ${error.message}`);
+                } finally { setIsLoading(false); }
+            };
+
+            const handleSave = async () => {
+                if (!enhancement) return;
+                try {
+                    const result = await enhancementAPI.savePrompt(enhancement, user);
+                    if (result.saved) setHistory(prev => [{ ...enhancement, id: result.id }, ...prev]);
+                    else setError(`Save failed: ${result.error}`);
+                } catch (error) { setError(`Save failed: ${error.message}`); }
+            };
+
+            const clearHistory = () => {
+                localStorage.removeItem('promptHistory');
+                setHistory([]);
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+                    <Navigation currentView={currentView} setCurrentView={setCurrentView} user={user} />
+                    {error && (
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex">
+                                    <div className="flex-shrink-0"><span className="text-red-400">⚠️</span></div>
+                                    <div className="ml-3"><p className="text-sm text-red-700">{error}</p></div>
+                                    <div className="ml-auto pl-3">
+                                        <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">✕</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {currentView === 'home' && (<HomePage setCurrentView={setCurrentView} />)}
+                    {currentView === 'enhance' && (
+                        <EnhanceView
+                            prompt={prompt} setPrompt={setPrompt}
+                            selectedMethod={selectedMethod} setSelectedMethod={setSelectedMethod}
+                            enhancement={enhancement} isLoading={isLoading} onEnhance={handleEnhance}
+                            onSave={handleSave}
+                            wordLimit={wordLimit} setWordLimit={setWordLimit}
+                            detectedModel={detectedModel}
+                            showHistory={showHistory} setShowHistory={setShowHistory}
+                            history={history} clearHistory={clearHistory}
+                            user={user}
+                        />
+                    )}
+                    {currentView === 'docs' && (<DocumentationView />)}
+                    <footer className="mt-24 mb-6 text-center text-gray-400 text-sm">
+                        Made by <span className="text-blue-600 font-semibold">Akshat Yadav</span> •
+                        Powered by <span className="text-purple-600 font-semibold">OpenRouter + GPT-4o</span>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Navigation Component (as before)
+        function Navigation({ currentView, setCurrentView, user }) {
+            const navItems = [
+                { id: 'home', label: 'Home', icon: '🏠' },
+                { id: 'enhance', label: 'Enhance', icon: '✨' },
+                { id: 'docs', label: 'Docs', icon: '📚' }
+            ];
+            return (
+                <header className="bg-white shadow-sm border-b border-gray-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                    <span className="text-white font-bold text-sm">PE</span>
+                                </div>
+                                <h1 className="text-xl font-bold text-gray-900">Prompt Enhancement Studio</h1>
+                            </div>
+                            <nav className="flex space-x-1">
+                                {navItems.map(item => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setCurrentView(item.id)}
+                                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                            currentView === item.id
+                                                ? 'bg-blue-100 text-blue-700'
+                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <span className="mr-2">{item.icon}</span>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </nav>
+                            <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-sm">🤖</span>
+                                </div>
+                                <span className="text-sm text-gray-700">{user.displayName}</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        }
+
+        // Home Page Component (as before)
+        function HomePage({ setCurrentView }) {
+            const methods = [
+                {
+                    id: 'rsti',
+                    title: 'RSTI - Quick Refinements',
+                    description: 'Rapid prompt improvements with four tactical moves',
+                    features: ['Revisit patterns', 'Separate sentences', 'Try new phrasing', 'Introduce constraints'],
+                    color: 'from-blue-500 to-blue-600',
+                    icon: '⚡'
+                },
+                {
+                    id: 'tcrei',
+                    title: 'TCREI - Prompt Architecture',
+                    description: 'Systematic approach to building complex prompts',
+                    features: ['Define task', 'Add context', 'Provide resources', 'Evaluate & iterate'],
+                    color: 'from-green-500 to-green-600',
+                    icon: '🏗️'
+                },
+                {
+                    id: 'tfcdc',
+                    title: 'TFCDC - Software Workflow',
+                    description: 'Engineering discipline for prompt-to-code projects',
+                    features: ['Think first', 'Use frameworks', 'Add checkpoints', 'Debug systematically'],
+                    color: 'from-purple-500 to-purple-600',
+                    icon: '⚙️'
+                }
+            ];
+
+            return (
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                    <div className="text-center mb-16 animate-fade-in">
+                        <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                            Master Prompt Engineering
+                        </h1>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                            Professional-grade prompt enhancement using proven methodologies.<br />
+                            <span className="text-blue-600 font-medium">Made by Akshat Yadav</span> • 
+                            <span className="text-purple-600 font-medium">Powered by OpenRouter + GPT-4o</span>
+                        </p>
+                        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                            <button
+                                onClick={() => setCurrentView('enhance')}
+                                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                            >
+                                Start Enhancing
+                            </button>
+                        </div>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-8 mb-16">
+                        {methods.map((method, index) => (
+                            <div
+                                key={method.id}
+                                className="method-card bg-white rounded-xl shadow-lg p-8 animate-slide-up"
+                                style={{ animationDelay: `${index * 0.1}s` }}
+                            >
+                                <div className={`w-12 h-12 bg-gradient-to-r ${method.color} rounded-lg flex items-center justify-center mb-6`}>
+                                    <span className="text-2xl">{method.icon}</span>
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-3">{method.title}</h3>
+                                <p className="text-gray-600 mb-4">{method.description}</p>
+                                <ul className="space-y-2">
+                                    {method.features.map((feature, i) => (
+                                        <li key={i} className="flex items-center text-sm text-gray-500">
+                                            <span className="w-2 h-2 bg-green-400 rounded-full mr-3"></span>
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white text-center">
+                        <h2 className="text-3xl font-bold mb-4">AI-Powered Enhancement</h2>
+                        <p className="text-lg mb-6 opacity-90">
+                            Real-time prompt enhancement using OpenRouter's GPT-4o
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-4 text-sm">
+                            <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">OpenRouter API</span>
+                            <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">GPT-4o</span>
+                            <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">Real-time Enhancement</span>
+                            <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">Local Storage</span>
+                            <span className="px-3 py-1 bg-white bg-opacity-20 rounded-full">Methodology-driven</span>
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        // EnhanceView (same as before, but output is handled by the new enhancementAPI/enhancePrompt)
+        function EnhanceView({ 
+            prompt, setPrompt, selectedMethod, setSelectedMethod, 
+            enhancement, isLoading, onEnhance, onSave,
+            wordLimit, setWordLimit, detectedModel,
+            showHistory, setShowHistory, history, clearHistory, user
+        }) {
+            const methods = [
+                { id: 'rsti', name: 'RSTI', description: 'Quick refinement moves' },
+                { id: 'tcrei', name: 'TCREI', description: 'Systematic prompt building' },
+                { id: 'tfcdc', name: 'TFCDC', description: 'Software engineering workflow' }
+            ];
+
+            return (
+                <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt Enhancement</h1>
+                            <p className="text-gray-600">Transform your prompts using AI-powered methodologies</p>
+                        </div>
+                        <div className="mt-4 md:mt-0 flex space-x-2">
+                            <button
+                                className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 transition"
+                                onClick={() => setShowHistory(h => !h)}
+                            >
+                                {showHistory ? 'Hide History' : 'Show History'}
+                            </button>
+                            {history.length > 0 && (
+                                <button
+                                    className="px-4 py-2 bg-red-50 text-red-700 rounded-lg border border-red-200 hover:bg-red-100 transition"
+                                    onClick={clearHistory}
+                                >
+                                    Clear History
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    {showHistory && (
+                        <div className="mb-8">
+                            <h2 className="text-lg font-bold text-gray-700 mb-3">Enhancement History</h2>
+                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                                {history.length ? history.map(item => (
+                                    <div key={item.id} className="bg-white rounded-lg border border-gray-100 p-4 shadow-sm">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center space-x-2">
+                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">{item.method}</span>
+                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">{item.model}</span>
+                                                <span className="text-xs text-gray-500">
+                                                    {new Date(item.timestamp || item.createdAt).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-gray-400">
+                                                Confidence: {Math.round((item.confidence || 0) * 100)}%
+                                            </span>
+                                        </div>
+                                        <div className="text-sm text-gray-700 mb-2">
+                                            <strong>Original:</strong> {item.original}
+                                        </div>
+                                        <div className="text-sm text-gray-600 whitespace-pre-wrap bg-gray-50 p-2 rounded">
+                                            {item.enhanced}
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="text-gray-400 text-center py-8">
+                                        No enhancement history yet. Start by enhancing your first prompt!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    <div className="grid lg:grid-cols-2 gap-8">
+                        {/* Input Section */}
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Enhancement Method
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {methods.map(method => (
+                                        <button
+                                            key={method.id}
+                                            onClick={() => setSelectedMethod(method.id)}
+                                            className={`p-3 rounded-lg border-2 transition-colors ${
+                                                selectedMethod === method.id
+                                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <div className="font-medium">{method.name}</div>
+                                            <div className="text-xs text-gray-500 mt-1">{method.description}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Your Prompt
+                                </label>
+                                <textarea
+                                    value={prompt}
+                                    onChange={(e) => setPrompt(e.target.value)}
+                                    placeholder="Enter your prompt here..."
+                                    className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Word Limit
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={wordLimit}
+                                        min={10}
+                                        max={1000}
+                                        step={10}
+                                        onChange={e => setWordLimit(Number(e.target.value))}
+                                        className="w-full p-2 border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Model (auto-detect)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={detectedModel}
+                                        disabled
+                                        className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                onClick={onEnhance}
+                                disabled={!prompt.trim() || isLoading}
+                                className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? (
+                                    <div className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                        Enhancing...
+                                    </div>
+                                ) : (
+                                    'Enhance Prompt'
+                                )}
+                            </button>
+                        </div>
+                        {/* Output Section */}
+                        <div className="space-y-6">
+                            {enhancement ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-semibold text-gray-900">Enhanced Prompt</h3>
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-sm text-gray-500">
+                                                Confidence: {Math.round(enhancement.confidence * 100)}%
+                                            </span>
+                                            <button
+                                                onClick={onSave}
+                                                className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                                                disabled={!user}
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <pre className="whitespace-pre-wrap text-sm text-gray-800">
+                                            {enhancement.enhanced}
+                                        </pre>
+                                    </div>
+                                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h4 className="font-medium text-gray-900 mb-3">Methodology Breakdown</h4>
+                                        <div className="space-y-2">
+                                            {Object.entries(enhancement.suggestions).map(([key, value]) => (
+                                                <div key={key} className="flex">
+                                                    <span className="font-medium text-blue-600 uppercase text-xs mr-2 mt-1">{key}:</span>
+                                                    <span className="text-sm text-gray-700">{value}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+                                    <div className="text-center text-gray-500">
+                                        <div className="text-4xl mb-2">✨</div>
+                                        <p>Enhanced prompt will appear here</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        // DocumentationView (as before)
+        function DocumentationView() {
+            const [activeTab, setActiveTab] = useState('rsti');
+            const methodologies = {
+                rsti: {
+                    title: "RSTI - Refinement Moves",
+                    description: "Quick tactical improvements for existing prompts",
+                    steps: [
+                        { name: "Revisit", description: "Go back to proven patterns and templates", example: "If 'Act as a...' worked before, adapt it to your current prompt" },
+                        { name: "Separate", description: "Break complex instructions into smaller pieces", example: "Use numbered steps: 1) Do X, 2) Then Y, 3) Finally Z" },
+                        { name: "Try", description: "Experiment with different phrasing and word choices", example: "Replace 'Generate' with 'Create', 'Craft', or 'Develop'" },
+                        { name: "Introduce", description: "Add explicit constraints and formatting requirements", example: "Add '≤150 words', 'professional tone', 'bullet points', 'beginner level'" }
+                    ]
+                },
+                tcrei: {
+                    title: "TCREI - Prompt Architecture",
+                    description: "Systematic approach for building complex prompts from scratch",
+                    steps: [
+                        { name: "Task", description: "Define exactly what you want the model to accomplish", example: "Create a lesson plan for teaching React hooks to junior developers" },
+                        { name: "Context", description: "Provide necessary background information", example: "Audience: 2-3 years experience, 90-minute session, remote learning format" },
+                        { name: "Resources", description: "Point to tools, references, and additional materials", example: "Use official React docs, include code sandbox examples" },
+                        { name: "Evaluate", description: "Check output against your success criteria", example: "Verify completeness, accuracy, appropriate difficulty" },
+                        { name: "Iterate", description: "Refine based on results and feedback", example: "Adjust complexity, add more examples if needed" }
+                    ]
+                },
+                tfcdc: {
+                    title: "TFCDC - Software Workflow",
+                    description: "Engineering discipline for prompt-to-code projects",
+                    steps: [
+                        { name: "Thinking", description: "Plan and design before writing any code", example: "Sketch data flow, identify edge cases, define success metrics" },
+                        { name: "Frameworks", description: "Choose appropriate tools and libraries", example: "Select React for UI, Express for API, PostgreSQL for data" },
+                        { name: "Checkpoints", description: "Add validation and testing throughout development", example: "Unit tests for functions, integration tests for APIs" },
+                        { name: "Debugging", description: "Systematic approach to finding and fixing issues", example: "Use breakpoints, inspect state, trace errors" },
+                        { name: "Context", description: "Document your work for future maintainability", example: "README files, code comments, API documentation" }
+                    ]
+                }
+            };
+            return (
+                <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Documentation</h1>
+                        <p className="text-gray-600">Complete guide to prompt enhancement methodologies<br />
+                            <span className="text-blue-600 font-medium">Made by Akshat Yadav</span>
+                        </p>
+                    </div>
+                    <div className="flex space-x-1 mb-8 bg-gray-100 p-1 rounded-lg">
+                        {Object.entries(methodologies).map(([key, method]) => (
+                            <button
+                                key={key}
+                                onClick={() => setActiveTab(key)}
+                                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+                                    activeTab === key
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                                {method.title.split(' - ')[0]}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                {methodologies[activeTab].title}
+                            </h2>
+                            <p className="text-gray-600 text-lg">
+                                {methodologies[activeTab].description}
+                            </p>
+                        </div>
+                        <div className="space-y-6">
+                            {methodologies[activeTab].steps.map((step, index) => (
+                                <div key={index} className="border-l-4 border-blue-500 pl-6 py-2">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                        {step.name}
+                                    </h3>
+                                    <p className="text-gray-700 mb-3">{step.description}</p>
+                                    <div className="bg-gray-50 p-3 rounded-lg">
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-medium">Example:</span> {step.example}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-12 border-t border-gray-200 pt-8">
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">API Integration</h3>
+                            <p className="text-gray-600 mb-4">
+                                Example: Integrate your AI model API and OpenRouter. Leave blank to add your keys.
+                            </p>
+                            <div className="code-block">
+                                <pre className="text-green-400 text-sm">
+{`// Example POST request to your model API or OpenRouter
+const enhancePrompt = async (input, method, model) => {
+  const url = ""; // Add your model API endpoint here
+  const openrouterUrl = ""; // Add your openrouter API endpoint here
+  // Choose url based on \`model\` or your logic
+  // Send input, method, wordLimit, etc. as JSON
+  // Add authorization headers as needed
+  // ...
+  return await fetch(url, { method: "POST", body: JSON.stringify({ input, method, model }) });
+};`}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-12 grid md:grid-cols-3 gap-6">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h4 className="font-bold text-blue-900 mb-3">When to Use RSTI</h4>
+                            <ul className="text-sm text-blue-800 space-y-1">
+                                <li>• Quick prompt fixes needed</li>
+                                <li>• Output is close but not quite right</li>
+                                <li>• Time-sensitive improvements</li>
+                                <li>• Copywriting and creative tasks</li>
+                            </ul>
+                        </div>
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                            <h4 className="font-bold text-green-900 mb-3">When to Use TCREI</h4>
+                            <ul className="text-sm text-green-800 space-y-1">
+                                <li>• Building complex prompts from scratch</li>
+                                <li>• Multi-step or multi-domain tasks</li>
+                                <li>• Need systematic approach</li>
+                                <li>• Training and documentation</li>
+                            </ul>
+                        </div>
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                            <h4 className="font-bold text-purple-900 mb-3">When to Use TFCDC</h4>
+                            <ul className="text-sm text-purple-800 space-y-1">
+                                <li>• Prompt-to-code projects</li>
+                                <li>• Software development workflows</li>
+                                <li>• Team collaboration needed</li>
+                                <li>• Production deployments</li>
+                            </ul>
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
